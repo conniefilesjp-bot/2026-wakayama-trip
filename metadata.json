@@ -1,0 +1,8 @@
+{
+  "name": "wakayama travel plan",
+  "description": "A Nordic minimalist travel management tool featuring itinerary planning, expense tracking, checklists, and Japan immigration QR code storage.",
+  "requestFramePermissions": [
+    "camera"
+  ],
+  "majorCapabilities": []
+}
