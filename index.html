@@ -5,10 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>2026 Wakayama Trip</title>
   
+  <!-- 引入 Tailwind CSS -->
   <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- 引入 Vue 3 Composition API -->
   <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+  
+  <!-- 引入 Sortable.js -->
   <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
+  <!-- Tailwind 自定義色彩 -->
   <script>
     tailwind.config = {
       theme: {
@@ -22,7 +28,7 @@
             textMuted: '#9B9087',  
           },
           fontFamily: {
-            sans:['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'sans-serif'],
+            sans:['-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
             serif:['Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif']
           }
         }
@@ -31,30 +37,61 @@
   </script>
 
   <style>
+    /* 隱藏滾動條 */
     .hide-scrollbar::-webkit-scrollbar { display: none; }
     .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    
     body { background-color: #E5E5E5; margin: 0; display: flex; justify-content: center; font-family: -apple-system, BlinkMacSystemFont, sans-serif; }
     
+    /* 拖曳樣式 */
     .sortable-ghost { opacity: 0.3; background: #EBE5DA; border-radius: 12px; }
     .sortable-drag { cursor: grabbing !important; }
 
+    /* 時間軸左側的空心小圓點 */
     .timeline-dot {
-      position: absolute; right: -24px; top: 6px; width: 6px; height: 6px;
-      border: 1.5px solid #9B9087; border-radius: 50%; background: #FAF8F3; z-index: 10;
+      position: absolute;
+      right: -24px;
+      top: 6px;
+      width: 6px;
+      height: 6px;
+      border: 1.5px solid #9B9087;
+      border-radius: 50%;
+      background: #FAF8F3;
+      z-index: 10;
+    }
+    
+    /* 呼吸燈效果 (用於下雨提醒) */
+    @keyframes pulse-soft {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.9; transform: scale(0.98); }
+    }
+    .animate-pulse-soft {
+      animation: pulse-soft 2s infinite ease-in-out;
     }
   </style>
 </head>
 <body class="items-center min-h-screen">
 
+  <!-- 手機外框容器 -->
   <div id="app" class="w-full max-w-md bg-brand h-[100dvh] sm:h-[850px] sm:rounded-[2.5rem] sm:shadow-2xl overflow-hidden flex flex-col relative text-textDark">
     
     <!-- 頂部 Header -->
-    <header class="bg-header text-brand px-5 py-4 flex justify-between items-center z-20 sticky top-0 shadow-sm">
-      <div class="border border-brand/40 rounded-full px-3 py-1 text-xs tracking-wider opacity-90 font-serif">
-        2026 May.
+    <header class="bg-header text-brand px-5 py-4 flex justify-between items-center z-20 sticky top-0 shadow-sm relative">
+      <!-- 左側 Icon: TO DO (行李箱) & Wish List (愛心) -->
+      <div class="flex gap-4 z-10">
+        <button @click="currentTab = 'todo'" :class="currentTab === 'todo' ? 'text-white' : 'text-brand/60'">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" /></svg>
+        </button>
+        <button @click="currentTab = 'wishlist'" :class="currentTab === 'wishlist' ? 'text-white' : 'text-brand/60'">
+          <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+        </button>
       </div>
-      <h1 class="text-lg font-bold tracking-widest font-serif">WAKAYAMA TRIP</h1>
-      <div class="flex gap-4">
+
+      <!-- 標題 (點擊返回首頁行程) -->
+      <h1 @click="currentTab = 'itinerary'" class="text-lg font-bold tracking-widest font-serif absolute left-1/2 -translate-x-1/2 whitespace-nowrap cursor-pointer hover:opacity-80 transition-opacity active:scale-95">WAKAYAMA</h1>
+
+      <!-- 右側 Icon: 記帳 & 資源 -->
+      <div class="flex gap-4 z-10">
         <button @click="currentTab = 'expense'" :class="currentTab === 'expense' ? 'text-white' : 'text-brand/60'">
           <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" /></svg>
         </button>
@@ -67,176 +104,456 @@
     <!-- ================= 1. 行程管理 (Itinerary) ================= -->
     <main v-show="currentTab === 'itinerary'" class="flex-1 overflow-y-auto hide-scrollbar relative">
       
-      <!-- 動態天氣與天文資訊 -->
-      <div class="text-center text-xs py-2 border-b border-gray-200/50 transition-colors"
-           :class="currentWeatherData.rain ? 'bg-[#4A5D6B] text-white' : 'bg-brand text-textMuted'">
-        {{ currentWeatherData.status }} {{ currentWeatherData.temp }} &nbsp;|&nbsp; 
-        🌅 {{ currentWeatherData.sunrise }} &nbsp; 🌇 {{ currentWeatherData.sunset }}
+      <!-- 實時天氣 -->
+      <div class="text-center text-xs py-2 border-b border-gray-200/50 bg-brand flex flex-col items-center justify-center min-h-[44px] transition-all duration-300">
+        <div v-if="isLoadingWeather" class="text-textMuted animate-pulse">正在連接衛星獲取天氣... 🛰️</div>
+        <div v-else class="flex flex-col items-center w-full">
+          <div class="text-textMuted flex items-center gap-2 font-medium tracking-wide">
+            <span>{{ currentWeather.icon }} {{ currentWeather.minTemp }}~{{ currentWeather.maxTemp }}°C</span>
+            <span class="opacity-40">|</span>
+            <span>🌅 {{ currentWeather.sunrise }}</span>
+            <span class="opacity-40">|</span>
+            <span>🌇 {{ currentWeather.sunset }}</span>
+          </div>
+          <div v-if="currentWeather.willRain" class="mt-1.5 bg-blue-50/80 text-blue-700 px-3 py-1 rounded-full font-bold flex items-center gap-1.5 border border-blue-200/60 shadow-sm animate-pulse-soft">
+            <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+            降雨機率高達 {{ currentWeather.precipProb }}%！外出請記得攜帶雨具 ☔
+          </div>
+        </div>
       </div>
 
       <!-- 日期選擇器 -->
       <div class="flex gap-2 overflow-x-auto hide-scrollbar px-4 pt-4 pb-2 sticky top-0 bg-brand z-10 border-b border-gray-100">
-        <button v-for="date in dates" :key="date.id" 
-          @click="selectedDate = date.id"
+        <button v-for="date in dates" :key="date.id" @click="selectedDate = date.id"
           class="flex-shrink-0 w-[4.5rem] py-3 rounded-[1.2rem] flex flex-col items-center justify-center transition-all shadow-sm relative overflow-hidden"
           :class="selectedDate === date.id ? 'bg-tabActive text-white' : 'bg-tabIdle text-textMuted hover:bg-gray-200'">
           <span class="text-[9px] font-bold tracking-widest opacity-80">{{ date.dayStr }}</span>
-          <span class="text-2xl font-serif font-bold mt-0.5 leading-none">{{ date.dayNum }}</span>
+          <span class="font-serif font-bold mt-0.5 leading-none text-2xl">{{ date.dayNum }}</span>
           <span class="text-[9px] font-bold tracking-widest mt-1 opacity-80">{{ date.weekday }}</span>
         </button>
       </div>
 
-      <!-- 下雨警報提示 -->
-      <div v-if="currentWeatherData.rain" class="mx-4 mt-4 bg-blue-50 border-l-4 border-blue-400 p-3 rounded-r-lg shadow-sm animate-pulse">
-        <div class="flex items-center gap-2">
-          <span class="text-lg">☔</span>
-          <div>
-            <p class="text-xs font-bold text-blue-900">降雨機率高提醒</p>
-            <p class="text-[10px] text-blue-700 mt-0.5">今日行程可能會遇到降雨，請務必攜帶雨傘或雨衣，並小心路滑。</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- 時間軸清單 -->
-      <ul ref="sortableList" class="px-5 pt-8 pb-32 relative space-y-7">
+      <!-- 時間軸 (Sortable) -->
+      <ul ref="sortableList" class="px-5 pt-8 pb-4 relative space-y-7">
         <div class="absolute left-[3.2rem] top-0 bottom-0 w-px bg-gray-200/50 z-0"></div>
 
-        <li v-for="item in currentDayItinerary" :key="item.id" :data-id="item.id" class="flex gap-6 relative z-10 group bg-brand rounded-lg p-1 transition-colors hover:bg-white">
-          <div class="w-12 text-right relative pt-0.5">
-            <span class="text-[15px] font-serif text-textDark">{{ item.time }}</span>
-            <div class="timeline-dot"></div>
-          </div>
-
-          <div class="flex-1 border-l-[3px] pl-4 py-0.5 relative" :class="item.color">
-            <div class="flex justify-between items-start">
-              <div>
-                <h3 class="text-base font-bold text-textDark tracking-wide leading-tight">{{ item.title }}</h3>
-                <div class="flex items-center gap-1 text-[10px] text-textMuted font-bold mt-1.5 tracking-wider">
-                  <span>{{ item.icon }}</span> <span>{{ item.type }}</span>
-                </div>
-              </div>
-              
-              <div class="flex items-center gap-1.5 text-gray-300">
-                <button @click="deleteItem(item.id)" class="p-1 hover:text-red-500 transition-colors">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-                </button>
-                <div class="drag-handle p-1 cursor-grab active:cursor-grabbing hover:text-gray-500">
-                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" /></svg>
-                </div>
-              </div>
+        <li v-for="item in currentDayItinerary" :key="item.id" :data-id="item.id" class="flex gap-6 relative z-10 group">
+          
+          <!-- 顯示狀態 -->
+          <template v-if="editItinId !== item.id">
+            <div class="w-12 text-right relative pt-0.5">
+              <span class="text-[15px] font-serif text-textDark">{{ item.time }}</span>
+              <div class="timeline-dot"></div>
             </div>
 
-            <div class="text-[13px] text-gray-500 mt-2 leading-relaxed whitespace-pre-line" v-html="item.desc"></div>
-            <div v-if="item.remark" class="text-[11px] text-textMuted mt-2 bg-gray-50 px-2 py-1 rounded inline-block">{{ item.remark }}</div>
+            <div class="flex-1 border-l-[3px] pl-4 py-0.5 relative" :class="item.color">
+              <div class="flex justify-between items-start">
+                <div>
+                  <h3 class="text-base font-bold text-textDark tracking-wide leading-tight">{{ item.title }}</h3>
+                  <div class="flex items-center gap-1 text-[10px] text-textMuted font-bold mt-1.5 tracking-wider">
+                    <span>{{ item.icon }}</span><span>{{ item.type }}</span>
+                  </div>
+                </div>
+                <div class="flex items-center gap-1 text-gray-300">
+                  <button @click="startEditItin(item)" class="p-1 hover:text-green-500 transition-colors cursor-pointer" title="編輯">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
+                  </button>
+                  <button @click="deleteItin(item.id)" class="p-1 hover:text-red-400 transition-colors cursor-pointer" title="刪除">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                  </button>
+                  <div class="drag-handle p-1 cursor-grab active:cursor-grabbing touch-none hover:text-gray-500">
+                    <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 8h16M4 16h16" /></svg>
+                  </div>
+                </div>
+              </div>
+              <div class="text-[13px] text-gray-500 mt-2 leading-relaxed whitespace-pre-line" v-html="item.desc"></div>
+              <div v-if="item.remark" class="text-[11px] text-textMuted mt-2 bg-gray-50 px-2 py-1 rounded inline-block">{{ item.remark }}</div>
+            </div>
+          </template>
+
+          <!-- 編輯狀態 -->
+          <div v-else class="w-full bg-[#FAF8F3] p-4 rounded-2xl border-2 border-dashed border-gray-300 ml-[3.2rem] relative z-20 shadow-sm">
+            <div class="flex gap-2 mb-2">
+              <input v-model="editItinForm.time" type="time" class="w-1/3 bg-white border border-gray-200 rounded-xl px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-header text-textDark">
+              <select v-model="editItinForm.type" class="flex-1 bg-white border border-gray-200 rounded-xl px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-header text-textDark">
+                <option value="TRANSPORT">🚆 TRANSPORT</option><option value="ACTIVITY">📍 ACTIVITY</option><option value="FOOD">🍴 FOOD</option><option value="SHOPPING">🛍️ SHOPPING</option><option value="HOTEL">🏨 HOTEL</option>
+              </select>
+            </div>
+            <input v-model="editItinForm.title" type="text" placeholder="標題..." class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-header mb-2">
+            <textarea v-model="editItinForm.desc" placeholder="描述..." rows="2" class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-header mb-2"></textarea>
+            <input v-model="editItinForm.remark" type="text" placeholder="備註..." class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-header mb-3">
+            <div class="flex justify-end gap-2">
+              <button @click="editItinId = null" class="px-4 py-1.5 text-sm bg-gray-200 rounded-lg text-textDark font-bold">取消</button>
+              <button @click="saveItinEdit" class="px-4 py-1.5 text-sm bg-tabActive text-white rounded-lg font-bold">儲存</button>
+            </div>
           </div>
         </li>
       </ul>
 
-      <!-- 新增行程按鈕 -->
-      <button @click="showAddModal = true" class="absolute bottom-6 right-6 w-12 h-12 bg-header text-brand rounded-full shadow-lg flex items-center justify-center hover:scale-105 active:scale-95 transition-all z-20">
-        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
-      </button>
-
-      <!-- 新增 Modal -->
-      <div v-if="showAddModal" class="absolute inset-0 bg-black/40 z-30 flex items-end sm:items-center justify-center">
-        <div class="bg-brand w-full sm:w-[90%] rounded-t-[2rem] sm:rounded-[2rem] p-6 shadow-2xl transform transition-transform animate-fade-in-up">
-          <div class="flex justify-between items-center mb-5">
-            <h3 class="text-lg font-serif font-bold text-header">新增行程</h3>
-            <button @click="showAddModal = false" class="text-gray-400 hover:text-gray-600">
-              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
-            </button>
+      <!-- 新增行程區塊 -->
+      <div class="px-5 pb-24 mt-4 relative z-10">
+        <div class="ml-[3.2rem] pl-4 border-2 border-dashed border-gray-300 rounded-2xl p-4 bg-[#FAF8F3]/50">
+          <h4 class="text-xs font-bold text-textMuted mb-3 tracking-widest">＋ 新增行程</h4>
+          <div class="flex gap-2 mb-2">
+            <input v-model="newItin.time" type="time" class="w-1/3 bg-white border border-gray-200 rounded-xl px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-header text-textDark">
+            <select v-model="newItin.type" class="flex-1 bg-white border border-gray-200 rounded-xl px-2 py-2 text-sm outline-none focus:ring-1 focus:ring-header text-textDark">
+              <option value="TRANSPORT">🚆 TRANSPORT</option><option value="ACTIVITY">📍 ACTIVITY</option><option value="FOOD">🍴 FOOD</option><option value="SHOPPING">🛍️ SHOPPING</option><option value="HOTEL">🏨 HOTEL</option>
+            </select>
           </div>
-          
-          <div class="space-y-4">
-            <div class="flex gap-3">
-              <input v-model="newItem.time" type="time" class="w-1/3 bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-header">
-              <select v-model="newItem.type" class="flex-1 bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-header">
-                <option value="ACTIVITY">📍 景點活動 (Activity)</option>
-                <option value="FOOD">🍴 美食餐飲 (Food)</option>
-                <option value="TRANSPORT">🚆 交通移動 (Transport)</option>
-                <option value="HOTEL">🏨 住宿辦理 (Hotel)</option>
-                <option value="SHOPPING">🛍️ 購物採買 (Shopping)</option>
-              </select>
-            </div>
-            <input v-model="newItem.title" type="text" placeholder="行程標題" class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-header">
-            <textarea v-model="newItem.desc" placeholder="詳細說明、預約代號、必吃必買等..." rows="3" class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-header resize-none"></textarea>
-            
-            <button @click="addItem" class="w-full bg-header text-white font-bold py-3 rounded-xl shadow-md active:scale-[0.98] transition-transform">加入至 {{ selectedDate.replace('day','Day ') }}</button>
-          </div>
+          <input v-model="newItin.title" type="text" placeholder="標題..." class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-header mb-2">
+          <input v-model="newItin.desc" type="text" placeholder="描述..." class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-header mb-3">
+          <button @click="addItin" class="w-full bg-tabActive text-white rounded-xl py-2 text-sm font-bold active:scale-95 transition-transform hover:bg-header">加入行程</button>
         </div>
       </div>
     </main>
 
-    <!-- ================= 2. 記帳系統 ================= -->
-    <main v-show="currentTab === 'expense'" class="flex-1 overflow-y-auto hide-scrollbar p-6 bg-[#FAF8F3]">
-       <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-serif font-bold">BUDGET</h2>
-        <button @click="currentTab = 'itinerary'" class="text-sm font-bold text-textMuted border border-gray-300 rounded-full px-3 py-1">返回</button>
+    <!-- ================= 2. 行前準備 (TO DO) ================= -->
+    <main v-show="currentTab === 'todo'" class="flex-1 overflow-y-auto hide-scrollbar p-6 bg-[#FAF8F3]">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-serif font-bold">TO DO</h2>
+        <button @click="currentTab = 'itinerary'" class="text-sm font-bold text-textMuted border border-gray-300 rounded-full px-3 py-1">返回行程</button>
       </div>
+
+      <!-- 新增 To-do -->
+      <div class="flex gap-2 mb-4">
+        <input v-model="newTodoText" @keyup.enter="addTodo" placeholder="新增準備事項..." class="flex-1 bg-white border border-gray-200 rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-header">
+        <button @click="addTodo" class="bg-tabActive text-white rounded-xl px-4 py-2 text-sm font-bold active:scale-95 transition-transform">加入</button>
+      </div>
+
+      <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100">
+        <ul class="space-y-4">
+          <li v-for="item in checklist" :key="item.id" class="flex items-start gap-3 justify-between group">
+            <template v-if="todoCrud.editId.value !== item.id">
+              <div class="flex items-start gap-3 flex-1 cursor-pointer" @click="item.done = !item.done">
+                <div class="w-5 h-5 flex-shrink-0 rounded border mt-0.5 flex items-center justify-center transition-colors shadow-sm" :class="item.done ? 'bg-header border-header text-white' : 'border-gray-300 bg-gray-50'">
+                  <svg v-if="item.done" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+                </div>
+                <span class="text-[14px] leading-snug transition-all flex-1" :class="item.done ? 'text-gray-300 line-through' : 'text-textDark'" v-html="item.text"></span>
+              </div>
+              <div class="flex gap-1 text-gray-300 opacity-50 group-hover:opacity-100 transition-opacity">
+                <button @click.stop="todoCrud.startEdit(item)" class="p-1 hover:text-green-500 transition-colors"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
+                <button @click.stop="todoCrud.remove(item.id)" class="p-1 hover:text-red-400 transition-colors"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+              </div>
+            </template>
+            <template v-else>
+              <div class="flex gap-2 w-full">
+                <input v-model="todoCrud.editForm.value.text" type="text" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header">
+                <button @click="todoCrud.saveEdit" class="text-xs bg-tabActive text-white px-3 rounded-xl font-bold">儲存</button>
+              </div>
+            </template>
+          </li>
+        </ul>
+      </div>
+    </main>
+
+    <!-- ================= 3. 購物清單 (WISH LIST) ================= -->
+    <main v-show="currentTab === 'wishlist'" class="flex-1 overflow-y-auto hide-scrollbar p-6 bg-[#FAF8F3]">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-serif font-bold">WISH LIST</h2>
+        <button @click="currentTab = 'itinerary'" class="text-sm font-bold text-textMuted border border-gray-300 rounded-full px-3 py-1">返回行程</button>
+      </div>
+
+      <div class="bg-white rounded-3xl p-5 shadow-sm mb-4 border border-gray-100">
+        <div class="flex gap-2 mb-2">
+          <input v-model="newWish.name" type="text" placeholder="想買什麼？..." class="flex-1 bg-gray-50 rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-header">
+          <input v-model="newWish.qty" type="number" placeholder="數量" class="w-1/4 bg-gray-50 rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-header">
+        </div>
+        <div class="flex gap-2 mb-3">
+          <input v-model="newWish.location" type="text" placeholder="購買地點..." class="flex-1 bg-gray-50 rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-header">
+          <input v-model="newWish.price" type="number" placeholder="單價 (¥)" class="w-1/3 bg-gray-50 rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-header">
+        </div>
+        <button @click="addWish" class="w-full bg-tabActive text-white rounded-xl py-2 text-sm font-bold active:scale-95 transition-transform">加入清單</button>
+      </div>
+
+      <div class="space-y-3 pb-12">
+        <div v-for="item in wishList" :key="item.id" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 relative group">
+          <template v-if="wishCrud.editId.value !== item.id">
+            <div class="flex items-start gap-3 transition-all duration-300">
+              <div class="w-5 h-5 flex-shrink-0 rounded border mt-0.5 flex items-center justify-center transition-colors cursor-pointer shadow-sm" :class="item.done ? 'bg-header border-header text-white' : 'border-gray-300 bg-gray-50'" @click="item.done = !item.done">
+                 <svg v-if="item.done" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+              </div>
+              <div class="flex-1 transition-opacity duration-300" :class="item.done ? 'opacity-40' : ''">
+                <div class="flex justify-between items-start">
+                  <h4 class="font-bold text-sm text-textDark" :class="item.done ? 'line-through' : ''">{{ item.name }}</h4>
+                  <div class="text-right">
+                    <p class="text-sm font-bold text-textDark">¥{{ (item.price * item.qty).toLocaleString() }}</p>
+                    <p class="text-[10px] text-textMuted mt-0.5">¥{{ item.price }} × {{ item.qty }}</p>
+                  </div>
+                </div>
+                <p class="text-xs text-textMuted mt-1">📍 {{ item.location }}</p>
+              </div>
+              <div class="flex flex-col gap-1 text-gray-300 opacity-60 group-hover:opacity-100 ml-2">
+                <button @click="wishCrud.startEdit(item)" class="p-1 hover:text-green-500 transition-colors"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
+                <button @click="wishCrud.remove(item.id)" class="p-1 hover:text-red-400 transition-colors"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+              </div>
+            </div>
+          </template>
+          <template v-else>
+            <div class="flex gap-2 mb-2">
+              <input v-model="wishCrud.editForm.value.name" type="text" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header">
+              <input v-model.number="wishCrud.editForm.value.qty" type="number" class="w-1/4 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header">
+            </div>
+            <div class="flex gap-2 mb-2">
+              <input v-model="wishCrud.editForm.value.location" type="text" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header">
+              <input v-model.number="wishCrud.editForm.value.price" type="number" class="w-1/3 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header">
+            </div>
+            <div class="flex justify-end gap-2">
+              <button @click="wishCrud.cancelEdit" class="text-xs bg-gray-200 px-3 py-1.5 rounded-lg font-bold">取消</button>
+              <button @click="wishCrud.saveEdit" class="text-xs bg-tabActive text-white px-3 py-1.5 rounded-lg font-bold">儲存</button>
+            </div>
+          </template>
+        </div>
+      </div>
+    </main>
+
+    <!-- ================= 4. 記帳系統 (Expense) ================= -->
+    <main v-show="currentTab === 'expense'" class="flex-1 overflow-y-auto hide-scrollbar p-6 bg-[#FAF8F3]">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-xl font-serif font-bold">BUDGET</h2>
+        <button @click="currentTab = 'itinerary'" class="text-sm font-bold text-textMuted border border-gray-300 rounded-full px-3 py-1">返回行程</button>
+      </div>
+
       <div class="bg-header rounded-3xl p-6 text-brand shadow-lg mb-6">
         <p class="text-xs text-white/60 mb-1">Total Expenses (HKD) - 匯率: 0.052</p>
         <h2 class="text-4xl font-serif tracking-tight">${{ totalHkd }}</h2>
         <p class="text-sm text-white/50 mt-1">¥ {{ totalJpy.toLocaleString() }}</p>
+        <div class="grid grid-cols-4 gap-2 mt-6 border-t border-white/10 pt-4">
+          <div v-for="(val, cat) in categoryTotals" :key="cat" class="text-center">
+            <p class="text-[10px] text-white/60">{{ cat }}</p>
+            <p class="text-xs font-semibold mt-1">¥{{ val > 0 ? (val/1000).toFixed(1)+'k' : 0 }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-3xl p-5 shadow-sm mb-6 border border-gray-100">
+        <div class="flex gap-2 mb-3">
+          <input v-model="newExp.amount" type="number" placeholder="¥ 金額" class="w-1/3 bg-gray-50 rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-header">
+          <input v-model="newExp.desc" type="text" placeholder="消費項目..." class="flex-1 bg-gray-50 rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-header">
+        </div>
+        <div class="flex gap-2">
+          <select v-model="newExp.cat" class="flex-1 bg-gray-50 rounded-xl px-3 py-2 text-sm outline-none">
+            <option>餐飲</option><option>購物</option><option>交通</option><option>住宿</option>
+          </select>
+          <button @click="addExpense" class="bg-tabActive text-white rounded-xl px-5 py-2 text-sm font-bold active:scale-95 transition-transform">記錄</button>
+        </div>
+      </div>
+
+      <div class="space-y-3 pb-8">
+        <div v-for="exp in expenses" :key="exp.id" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-50 relative group">
+          <template v-if="expCrud.editId.value !== exp.id">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-sm font-bold text-textDark">{{ exp.desc }}</p>
+                <p class="text-[10px] text-textMuted mt-0.5">{{ exp.cat }} • {{ exp.date }}</p>
+              </div>
+              <div class="text-right flex items-center gap-3">
+                <div>
+                  <p class="text-sm font-bold text-textDark">¥{{ exp.amount.toLocaleString() }}</p>
+                  <p class="text-[10px] text-textMuted">${{ (exp.amount * exchangeRate).toFixed(1) }}</p>
+                </div>
+                <div class="flex flex-col gap-1 text-gray-300 opacity-60 group-hover:opacity-100 transition-opacity">
+                  <button @click="expCrud.startEdit(exp)" class="hover:text-green-500"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
+                  <button @click="expCrud.remove(exp.id)" class="hover:text-red-400"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                </div>
+              </div>
+            </div>
+          </template>
+          <template v-else>
+            <div class="flex gap-2 mb-2">
+              <input v-model.number="expCrud.editForm.value.amount" type="number" class="w-1/3 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header">
+              <input v-model="expCrud.editForm.value.desc" type="text" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header">
+            </div>
+            <div class="flex gap-2">
+              <select v-model="expCrud.editForm.value.cat" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none">
+                <option>餐飲</option><option>購物</option><option>交通</option><option>住宿</option>
+              </select>
+              <button @click="expCrud.cancelEdit" class="text-xs bg-gray-200 px-3 rounded-lg font-bold">取消</button>
+              <button @click="expCrud.saveEdit" class="text-xs bg-tabActive text-white px-3 rounded-lg font-bold">儲存</button>
+            </div>
+          </template>
+        </div>
       </div>
     </main>
 
-    <!-- ================= 3. 資源與清單 (Resources) ================= -->
+    <!-- ================= 5. 資源、參考連結與航班住宿 (Resources) ================= -->
     <main v-show="currentTab === 'resources'" class="flex-1 overflow-y-auto hide-scrollbar p-6 bg-[#FAF8F3]">
       <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-serif font-bold">INFO & LIST</h2>
-        <button @click="currentTab = 'itinerary'" class="text-sm font-bold text-textMuted border border-gray-300 rounded-full px-3 py-1">返回</button>
+        <h2 class="text-xl font-serif font-bold">INFO & LINKS</h2>
+        <button @click="currentTab = 'itinerary'" class="text-sm font-bold text-textMuted border border-gray-300 rounded-full px-3 py-1">返回行程</button>
       </div>
-      
-      <!-- 航班與飯店保留原設計 (省略大區塊，為精簡直接顯示) -->
-      
-      <!-- 行前準備清單 -->
-      <h3 class="text-xs font-bold text-textMuted mb-2 tracking-widest">PACKING & TO-DO</h3>
-      <div class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 mb-6">
-        <ul class="space-y-4">
-          <li v-for="item in checklist" :key="item.id" class="flex items-start gap-3 cursor-pointer" @click="item.done = !item.done">
-            <div class="w-5 h-5 rounded border mt-0.5 flex items-center justify-center transition-colors"
-                 :class="item.done ? 'bg-header border-header text-white' : 'border-gray-300'">
-              <svg v-if="item.done" class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
+
+      <!-- 日本入境 QR Code -->
+      <h3 class="text-xs font-bold text-textMuted mb-2 tracking-widest mt-2 flex justify-between">
+        <span>JAPAN ENTRY QR CODE</span>
+      </h3>
+      <div class="bg-white rounded-3xl p-5 shadow-sm mb-6 border border-gray-100 flex flex-col items-center justify-center relative group">
+         <img v-if="entryQrCode" :src="entryQrCode" class="w-full max-w-[200px] h-auto object-contain rounded-xl shadow-sm mb-3 border border-gray-100">
+         <div v-else class="w-full max-w-[200px] aspect-square bg-gray-50 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-400 mb-3 gap-2">
+           <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg>
+           <span class="text-xs font-medium">尚未上傳 QR Code</span>
+         </div>
+         
+         <label class="cursor-pointer text-xs bg-gray-100 border border-gray-200 px-5 py-2.5 rounded-xl text-textDark font-bold hover:bg-gray-200 transition-colors active:scale-95 shadow-sm">
+           {{ entryQrCode ? '更換圖片' : '上傳圖片' }}
+           <input type="file" accept="image/*" class="hidden" @change="handleQrUpload">
+         </label>
+      </div>
+
+      <!-- 航班資訊 -->
+      <h3 class="text-xs font-bold text-textMuted mb-2 tracking-widest flex justify-between mt-6">
+        <span>FLIGHTS</span>
+        <button @click="addFlight" class="text-header hover:text-green-600 transition-colors font-bold">＋新增</button>
+      </h3>
+      <div class="space-y-3 mb-6">
+        <div v-for="flight in flights" :key="flight.id" class="bg-white rounded-3xl p-5 shadow-sm border border-gray-100 relative group">
+          <template v-if="flightCrud.editId.value !== flight.id">
+            <div class="flex justify-between items-center">
+              <div>
+                <p class="text-[10px] text-orange-500 font-bold mb-1">{{flight.depNo}}</p>
+                <p class="font-bold text-textDark">{{flight.depCity}} {{flight.depTime}}</p>
+                <p class="text-xs text-textMuted">{{flight.depDate}}</p>
+              </div>
+              <div class="flex flex-col items-center">
+                <span class="text-[10px] text-gray-400">{{flight.duration}}</span>
+                <div class="w-12 border-t border-dashed border-gray-300 my-1 relative">
+                   <span class="absolute top-[-8px] right-[-4px] text-[10px]">✈️</span>
+                </div>
+              </div>
+              <div class="text-right mr-5">
+                 <p class="text-[10px] text-orange-500 font-bold mb-1">{{flight.arrNo}}</p>
+                <p class="font-bold text-textDark">{{flight.arrCity}} {{flight.arrTime}}</p>
+                <p class="text-xs text-textMuted">{{flight.arrDate}}</p>
+              </div>
             </div>
-            <span class="text-sm transition-all" :class="item.done ? 'text-gray-300 line-through' : 'text-textDark'" v-html="item.text"></span>
-          </li>
-        </ul>
+            <!-- 修改/刪除按鈕 浮動右側 -->
+            <div class="absolute top-1/2 -translate-y-1/2 right-2 flex flex-col gap-1 text-gray-300 opacity-50 group-hover:opacity-100 transition-opacity">
+              <button @click="flightCrud.startEdit(flight)" class="p-1 hover:text-green-500"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
+              <button @click="flightCrud.remove(flight.id)" class="p-1 hover:text-red-400"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+            </div>
+          </template>
+          <template v-else>
+            <div class="flex gap-2 mb-2">
+              <input v-model="flightCrud.editForm.value.depNo" placeholder="去程航班" class="w-1/2 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none">
+              <input v-model="flightCrud.editForm.value.arrNo" placeholder="回程航班" class="w-1/2 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none">
+            </div>
+            <div class="flex gap-2 mb-2">
+              <input v-model="flightCrud.editForm.value.depCity" placeholder="出發地" class="w-1/3 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-[11px] outline-none">
+              <input v-model="flightCrud.editForm.value.depTime" placeholder="時間" class="w-1/3 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-[11px] outline-none">
+              <input v-model="flightCrud.editForm.value.depDate" placeholder="日期" class="w-1/3 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-[11px] outline-none">
+            </div>
+            <div class="flex gap-2 mb-2">
+              <input v-model="flightCrud.editForm.value.arrCity" placeholder="抵達地" class="w-1/3 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-[11px] outline-none">
+              <input v-model="flightCrud.editForm.value.arrTime" placeholder="時間" class="w-1/3 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-[11px] outline-none">
+              <input v-model="flightCrud.editForm.value.arrDate" placeholder="日期" class="w-1/3 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-[11px] outline-none">
+            </div>
+            <div class="flex justify-end gap-2 mt-3">
+              <button @click="flightCrud.cancelEdit" class="text-xs bg-gray-200 px-3 py-1.5 rounded-lg font-bold">取消</button>
+              <button @click="flightCrud.saveEdit" class="text-xs bg-tabActive text-white px-3 py-1.5 rounded-lg font-bold">儲存</button>
+            </div>
+          </template>
+        </div>
       </div>
 
-      <!-- ================= 新增：參考資料 (REFERENCES) ================= -->
-      <h3 class="text-xs font-bold text-textMuted mb-2 tracking-widest">REFERENCES</h3>
+      <!-- 住宿資訊 -->
+      <h3 class="text-xs font-bold text-textMuted mb-2 tracking-widest mt-6 flex justify-between">
+        <span>ACCOMMODATION</span>
+        <button @click="addAcc" class="text-header hover:text-green-600 transition-colors font-bold">＋新增</button>
+      </h3>
+      <div class="space-y-4 mb-6">
+        <div v-for="acc in accommodations" :key="acc.id" class="bg-white rounded-3xl p-4 shadow-sm border border-gray-100 group relative">
+          <template v-if="accCrud.editId.value !== acc.id">
+            <!-- 住宿圖片顯示區 -->
+            <img v-if="acc.image" :src="acc.image" class="w-full h-36 object-cover rounded-2xl mb-3 shadow-sm border border-gray-100">
+            <p class="font-bold text-sm text-textDark mr-6">{{ acc.name }}</p>
+            <p class="text-xs text-textMuted mt-1">入住: {{ acc.date }} | {{ acc.remark }}</p>
+            <div class="absolute top-4 right-4 flex flex-col gap-2 text-gray-800 opacity-50 group-hover:opacity-100 bg-white/80 backdrop-blur rounded-lg p-1">
+              <button @click="accCrud.startEdit(acc)" class="hover:text-green-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
+              <button @click="accCrud.remove(acc.id)" class="hover:text-red-500"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+            </div>
+          </template>
+          <template v-else>
+            <!-- 住宿圖片上傳區 -->
+            <img v-if="accCrud.editForm.value.image" :src="accCrud.editForm.value.image" class="w-full h-24 object-cover rounded-xl mb-2 opacity-50 border border-gray-200">
+            <label class="block text-xs font-bold text-header mb-3 cursor-pointer bg-gray-100 p-2.5 rounded-xl text-center border border-dashed border-gray-300 hover:bg-gray-200 transition-colors">
+               ＋ 上傳飯店圖片
+               <input type="file" accept="image/*" class="hidden" @change="handleAccImageUpload($event, accCrud.editForm.value)">
+            </label>
+            <input v-model="accCrud.editForm.value.name" placeholder="飯店名稱" class="w-full mb-2 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none">
+            <div class="flex gap-2 mb-2">
+              <input v-model="accCrud.editForm.value.date" placeholder="入住日期" class="w-1/3 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none">
+              <input v-model="accCrud.editForm.value.remark" placeholder="備註" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none">
+            </div>
+            <div class="flex justify-end gap-2">
+              <button @click="accCrud.cancelEdit" class="text-xs bg-gray-200 px-3 py-1.5 rounded-lg font-bold">取消</button>
+              <button @click="accCrud.saveEdit" class="text-xs bg-tabActive text-white px-3 py-1.5 rounded-lg font-bold">儲存</button>
+            </div>
+          </template>
+        </div>
+      </div>
+
+      <!-- 參考資料 (USEFUL LINKS) -->
+      <h3 class="text-xs font-bold text-textMuted mb-2 tracking-widest mt-8 flex justify-between">
+        <span>USEFUL LINKS</span>
+        <button @click="addLink" class="text-header hover:text-green-600 transition-colors font-bold">＋新增</button>
+      </h3>
       <div class="space-y-3 pb-8">
-        <a v-for="link in references" :key="link.title" :href="link.url" target="_blank" 
-           class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex items-center justify-between group hover:border-[#9B9087] transition-colors active:scale-[0.98]">
-          <div class="overflow-hidden pr-2">
-            <p class="font-bold text-sm text-textDark truncate">{{ link.title }}</p>
-            <p class="text-[10px] text-textMuted mt-1 truncate">{{ link.url }}</p>
-          </div>
-          <svg class="w-5 h-5 text-gray-300 group-hover:text-header transition-colors flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
-          </svg>
-        </a>
+        <div v-for="link in referenceLinks" :key="link.id" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 group relative">
+          <template v-if="linkCrud.editId.value !== link.id">
+            <a :href="link.url" target="_blank" class="block pr-6">
+              <p class="font-bold text-sm text-textDark">{{ link.title }}</p>
+              <p class="text-[10px] text-textMuted mt-0.5">{{ link.desc }}</p>
+            </a>
+            <div class="absolute top-2 right-2 flex flex-col gap-1 text-gray-300 opacity-50 group-hover:opacity-100">
+              <button @click="linkCrud.startEdit(link)" class="hover:text-green-500"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
+              <button @click="linkCrud.remove(link.id)" class="hover:text-red-400"><svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+            </div>
+          </template>
+          <template v-else>
+            <input v-model="linkCrud.editForm.value.title" placeholder="網站名稱" class="w-full mb-2 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none">
+            <input v-model="linkCrud.editForm.value.desc" placeholder="簡單描述" class="w-full mb-2 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none">
+            <input v-model="linkCrud.editForm.value.url" placeholder="網址 (https://...)" class="w-full mb-3 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none">
+            <div class="flex justify-end gap-2">
+              <button @click="linkCrud.cancelEdit" class="text-xs bg-gray-200 px-3 py-1.5 rounded-lg font-bold">取消</button>
+              <button @click="linkCrud.saveEdit" class="text-xs bg-tabActive text-white px-3 py-1.5 rounded-lg font-bold">儲存</button>
+            </div>
+          </template>
+        </div>
       </div>
-
     </main>
-
   </div>
-
-  <style>
-    @keyframes fadeInUp {
-      from { opacity: 0; transform: translateY(20px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    .animate-fade-in-up { animation: fadeInUp 0.3s ease-out forwards; }
-  </style>
 
   <script>
     const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
+
+    // 通用 CRUD 工廠函數 (給陣列使用)
+    const setupCrud = (listRef) => {
+      const editId = ref(null);
+      const editForm = ref({});
+      const startEdit = (item) => {
+        editId.value = item.id;
+        editForm.value = JSON.parse(JSON.stringify(item));
+      };
+      const saveEdit = () => {
+        const index = listRef.value.findIndex(i => i.id === editId.value);
+        if (index > -1) {
+           listRef.value[index] = { ...listRef.value[index], ...editForm.value };
+        }
+        editId.value = null;
+      };
+      const cancelEdit = () => { editId.value = null; };
+      const remove = (id) => {
+        if (confirm('確定要刪除嗎？')) {
+          listRef.value = listRef.value.filter(i => i.id !== id);
+        }
+      };
+      return { editId, editForm, startEdit, saveEdit, cancelEdit, remove };
+    };
 
     createApp({
       setup() {
         const currentTab = ref('itinerary');
         
+        // =============== 1. 日期選擇器與實時天氣 ===============
         const dates =[
           { id: 'day1', dayStr: 'DAY 1', dayNum: '14', weekday: 'THU' },
           { id: 'day2', dayStr: 'DAY 2', dayNum: '15', weekday: 'FRI' },
@@ -244,81 +561,137 @@
           { id: 'day4', dayStr: 'DAY 4', dayNum: '17', weekday: 'SUN' },
           { id: 'day5', dayStr: 'DAY 5', dayNum: '18', weekday: 'MON' },
         ];
-        const selectedDate = ref('day1');
+        const selectedDate = ref('day1'); 
 
-        const weatherInfo = {
-          'day1': { temp: '18-24°C', status: '☀️ 晴朗', sunrise: '04:58', sunset: '18:53', rain: false },
-          'day2': { temp: '19-25°C', status: '⛅ 多雲', sunrise: '04:57', sunset: '18:54', rain: false },
-          'day3': { temp: '16-21°C', status: '🌧️ 陣雨', sunrise: '04:56', sunset: '18:55', rain: true }, 
-          'day4': { temp: '18-26°C', status: '☀️ 晴天', sunrise: '04:56', sunset: '18:56', rain: false },
-          'day5': { temp: '20-27°C', status: '🌤️ 晴時多雲', sunrise: '04:55', sunset: '18:57', rain: false },
+        const weatherData = ref({});
+        const isLoadingWeather = ref(true);
+        const targetDateStrs = {
+          'day1': '2026-05-14', 'day2': '2026-05-15', 'day3': '2026-05-16', 'day4': '2026-05-17', 'day5': '2026-05-18'
         };
-        const currentWeatherData = computed(() => weatherInfo[selectedDate.value]);
 
+        const fetchRealTimeWeather = async () => {
+          try {
+            const url = 'https://api.open-meteo.com/v1/forecast?latitude=34.2305&longitude=135.1705&daily=weather_code,temperature_2m_max,temperature_2m_min,sunrise,sunset,precipitation_probability_max&timezone=Asia%2FTokyo&forecast_days=16';
+            const res = await fetch(url);
+            const data = await res.json();
+            for (const[dayKey, dateStr] of Object.entries(targetDateStrs)) {
+              const index = data.daily.time.indexOf(dateStr);
+              if (index !== -1) {
+                const code = data.daily.weather_code[index];
+                let icon = '☀️'; let willRain = false;
+                if ([1, 2].includes(code)) icon = '⛅';
+                else if (code === 3) icon = '☁️';
+                else if ([45, 48].includes(code)) icon = '🌫️';
+                else if ([51, 53, 55, 61, 63, 65, 80, 81, 82].includes(code)) { icon = '🌧️'; willRain = true; }
+                else if ([71, 73, 75].includes(code)) icon = '❄️';
+                else if ([95, 96, 99].includes(code)) { icon = '⛈️'; willRain = true; }
+                if (data.daily.precipitation_probability_max[index] > 40) willRain = true;
+                
+                weatherData.value[dayKey] = {
+                  icon, maxTemp: Math.round(data.daily.temperature_2m_max[index]),
+                  minTemp: Math.round(data.daily.temperature_2m_min[index]),
+                  sunrise: data.daily.sunrise[index].split('T')[1],
+                  sunset: data.daily.sunset[index].split('T')[1],
+                  willRain, precipProb: data.daily.precipitation_probability_max[index]
+                };
+              } else {
+                 weatherData.value[dayKey] = { icon: '☀️', maxTemp: 26, minTemp: 18, sunrise: '04:58', sunset: '18:53', willRain: false, precipProb: 0 };
+              }
+            }
+          } catch (err) {
+            Object.keys(targetDateStrs).forEach(k => weatherData.value[k] = { icon: '⛅', maxTemp: 26, minTemp: 18, sunrise: '04:58', sunset: '18:53', willRain: false, precipProb: 0 });
+          } finally { isLoadingWeather.value = false; }
+        };
+
+        const currentWeather = computed(() => weatherData.value[selectedDate.value] || { icon: '☀️', maxTemp: '--', minTemp: '--', sunrise: '--:--', sunset: '--:--', willRain: false, precipProb: 0 });
+
+        // =============== 2. 行程解析與 CRUD ===============
         const typeConfig = {
-          'FLIGHT':    { icon: '✈️', color: 'border-blue-400' },
-          'TRANSPORT': { icon: '🚆', color: 'border-blue-400' },
-          'ACTIVITY':  { icon: '📍', color: 'border-teal-500' },
-          'FOOD':      { icon: '🍴', color: 'border-orange-400' },
-          'HOTEL':     { icon: '🏨', color: 'border-gray-400' },
-          'SHOPPING':  { icon: '🛍️', color: 'border-[#A89A8E]' }
+          'TRANSPORT': { type: 'TRANSPORT', icon: '🚆', color: 'border-blue-400' },
+          'ACTIVITY': { type: 'ACTIVITY', icon: '📍', color: 'border-teal-500' },
+          'FOOD': { type: 'FOOD', icon: '🍴', color: 'border-orange-400' },
+          'SHOPPING': { type: 'SHOPPING', icon: '🛍️', color: 'border-[#A89A8E]' },
+          'HOTEL': { type: 'HOTEL', icon: '🏨', color: 'border-gray-400' }
         };
 
         const itineraryData = ref({
           'day1':[
-            { id: '1-1', time: '11:50', type: 'FLIGHT', ...typeConfig['FLIGHT'], title: '抵達關西機場 (KIX)', desc: '完成入關、領取行李。搭乘 UO850。' },
-            { id: '1-2', time: '12:30', type: 'TRANSPORT', ...typeConfig['TRANSPORT'], title: '兌換 JR 關西廣域周遊券', desc: '預約代號：KLOOK-JR-5582' },
-            { id: '1-3', time: '15:30', type: 'ACTIVITY', ...typeConfig['ACTIVITY'], title: '抵達 JR 白濱站', desc: '轉乘 16:00 的「明光巴士」前往飯店區。' },
-            { id: '1-4', time: '16:30', type: 'HOTEL', ...typeConfig['HOTEL'], title: '入住 Seamore Residence', desc: '安頓行李，準備出門看夕陽。' },
+            { id: '1-1', time: '11:50', type: 'TRANSPORT', icon: '✈️', color: 'border-blue-400', title: '抵達關西機場 (KIX)', desc: '完成入關、領取行李。' },
+            { id: '1-2', time: '12:30', type: 'TRANSPORT', icon: '🚆', color: 'border-blue-400', title: '兌換 JR 關西廣域周遊券', desc: '前往 JR 機場站服務處兌換。<br><span class="text-red-600 font-bold">預約代號：KLOOK-JR-5582</span>' },
+            { id: '1-4', time: '13:00', type: 'TRANSPORT', icon: '🚆', color: 'border-blue-400', title: 'JR 關空快速', desc: '搭乘約 2hr 前往「日根野站」轉車。' },
+            { id: '1-5', time: '13:30', type: 'TRANSPORT', icon: '🚆', color: 'border-blue-400', title: '特急黑潮號 (KUROSHIO)', desc: '換車往新宮方向。' },
+            { id: '1-6', time: '15:30', type: 'ACTIVITY', icon: '📍', color: 'border-teal-500', title: '抵達 JR 白濱站', desc: '轉乘 16:00 的「明光巴士」前往飯店區。' },
+            { id: '1-7', time: '16:30', type: 'HOTEL', icon: '🏨', color: 'border-gray-400', title: '入住 Seamore Residence', desc: '安頓行李。' },
+            { id: '1-8', time: '18:00', type: 'FOOD', icon: '🍴', color: 'border-orange-400', title: '晚餐 & 附近散步', desc: '導遊推薦 <span class="text-orange-600 font-bold">必吃美食：和歌山海鮮</span>。' }
           ],
           'day2':[
-            { id: '2-1', time: '09:30', type: 'ACTIVITY', ...typeConfig['ACTIVITY'], title: 'Adventure World', desc: '必看重點：小熊貓區。' },
-            { id: '2-2', time: '11:30', type: 'FOOD', ...typeConfig['FOOD'], title: 'Toretore 市場 午餐', desc: '必吃：南高梅、新鮮海鮮BBQ。' },
-            { id: '2-3', time: '13:30', type: 'ACTIVITY', ...typeConfig['ACTIVITY'], title: '川久博物館', desc: '感受歐式華麗建築之美。' },
+            { id: '2-1', time: '08:45', type: 'TRANSPORT', icon: '🚌', color: 'border-blue-400', title: '出發前往 Adventure World', desc: '08:55 搭乘[101 loop bus] 從新湯崎站出發。<br><span class="text-purple-600 font-bold">使用和歌山 Fun pass 換領</span>。' },
+            { id: '2-2', time: '09:30', type: 'ACTIVITY', icon: '🐾', color: 'border-teal-500', title: 'Adventure World', desc: '園內步行約 1.5-2 小時，<span class="text-teal-600 font-bold">必看重點：小熊貓區</span>。' },
+            { id: '2-3', time: '11:18', type: 'TRANSPORT', icon: '🚌', color: 'border-blue-400', title: '搭車往 Toretore 市場', desc: '搭乘[101 Loop bus] 約 11 分鐘。' },
+            { id: '2-4', time: '11:30', type: 'FOOD', icon: '🍴', color: 'border-orange-400', title: 'Lunch: Toretore 市場', desc: '停留約 1 小時品嚐海鮮。' },
+            { id: '2-6', time: '13:30', type: 'ACTIVITY', icon: '🏛️', color: 'border-teal-500', title: '川久博物館', desc: '門票 1000 JPY，參觀約 1-1.5 小時。' },
+            { id: '2-7', time: '15:00', type: 'ACTIVITY', icon: '🏖️', color: 'border-teal-500', title: '白濱自然絕景巡禮', desc: '散步拍照：<br>1. 白良濱沙灘<br>2. 千疊敷<br>3. 三段壁' },
+            { id: '2-9', time: '19:45', type: 'TRANSPORT', icon: '🚆', color: 'border-blue-400', title: '特急黑潮號往勝浦', desc: '19:56 發車 KUROSHIO 21 往新宮方向。<br><span class="text-red-600 font-bold">務必預先劃好指定席！</span>', remark: '21:23 抵達紀伊勝浦車站' }
           ],
           'day3':[
-            { id: '3-1', time: '09:40', type: 'ACTIVITY', ...typeConfig['ACTIVITY'], title: '熊野古道健行', desc: '走大門坂前往熊野那智大社與青岸渡寺。' },
-            { id: '3-2', time: '13:00', type: 'ACTIVITY', ...typeConfig['ACTIVITY'], title: '浦島酒店 日歸溫泉', desc: '必訪：忘歸洞溫泉。' },
-            { id: '3-3', time: '21:01', type: 'HOTEL', ...typeConfig['HOTEL'], title: '入住 Dormy Inn (和歌山)', desc: '必吃：晚上免費的「夜鳴拉麵」！' }
+            { id: '3-1', time: '08:15', type: 'TRANSPORT', icon: '🚌', color: 'border-blue-400', title: '搭那智巴士前往大門坂', desc: '那智巴士來回 1110 yen。' },
+            { id: '3-2', time: '08:50', type: 'ACTIVITY', icon: '🥾', color: 'border-teal-500', title: '大門坂 → 那智大社', desc: '走熊野古道。<br><span class="text-teal-600 font-bold">穿著行山鞋與吸汗衣物</span>。' },
+            { id: '3-3', time: '10:00', type: 'ACTIVITY', icon: '⛩️', color: 'border-teal-500', title: '那智瀑布區', desc: '熊野那智大社、青岸渡寺、那智瀑布。' },
+            { id: '3-4', time: '12:15', type: 'FOOD', icon: '🍱', color: 'border-orange-400', title: 'Lunch: にぎわい市場', desc: '停留 30-45 分鐘。<br><span class="text-purple-600 font-bold">使用和歌山 Fun pass 換領</span>。' },
+            { id: '3-5', time: '13:00', type: 'ACTIVITY', icon: '♨️', color: 'border-teal-500', title: '浦島酒店 忘歸洞日歸溫泉', desc: '搭乘接駁船 (車程 6 分鐘)。<br><span class="text-orange-600 font-bold">記得帶毛巾、拖鞋、換洗衣服！</span>' },
+            { id: '3-6', time: '15:00', type: 'ACTIVITY', icon: '🔭', color: 'border-teal-500', title: '狼煙山展望台', desc: '搭本館電梯到山上館 32F。' },
+            { id: '3-7', time: '16:00', type: 'FOOD', icon: '🍰', color: 'border-orange-400', title: '鳥居 & 熊野 Cafe', desc: '步行看鳥居，享用下午茶。' },
+            { id: '3-9', time: '18:04', type: 'TRANSPORT', icon: '🚆', color: 'border-blue-400', title: '特急黑潮號往和歌山', desc: 'KUROSHIO 36 往新大阪，車程約 3 小時。' },
+            { id: '3-10', time: '21:01', type: 'HOTEL', icon: '🏨', color: 'border-gray-400', title: '抵達與入住 Dormy Inn', desc: '抵達和歌山，步行 8 分鐘入住。' }
           ],
           'day4':[
-            { id: '4-1', time: '10:00', type: 'ACTIVITY', ...typeConfig['ACTIVITY'], title: '和歌山市區觀光', desc: '和歌山城或黑潮市場。' },
-            { id: '4-2', time: '16:00', type: 'ACTIVITY', icon:'🎸', color:'border-purple-500', title: 'HYDE 演唱會', desc: '必買伴手禮：HYDE 限定周邊、毛巾。' }
+            { id: '4-1', time: '10:00', type: 'ACTIVITY', icon: '🏯', color: 'border-teal-500', title: '市區自由活動', desc: '早上可安排和歌山城或周邊逛逛。' },
+            { id: '4-2', time: '14:00', type: 'FOOD', icon: '🍰', color: 'border-orange-400', title: 'ホテルズカフェ パスワ 下午茶', desc: '停留約 45 分鐘。<br><span class="text-purple-600 font-bold">使用和歌山 Fun pass 換領</span>。' },
+            { id: '4-4', time: '16:00', type: 'ACTIVITY', icon: '🎸', color: 'border-teal-500', title: 'HYDE 演唱會', desc: '地點：和歌山県民文化会館 大ホール。17:00 開演。<br><span class="text-purple-600 font-bold">記得帶應援物！</span>', remark: '19:00 完結' }
           ],
           'day5':[
-            { id: '5-1', time: '12:00', type: 'TRANSPORT', ...typeConfig['TRANSPORT'], title: '前往關西機場', desc: '搭乘電車返回 KIX 機場。' },
-            { id: '5-2', time: '14:25', type: 'FLIGHT', ...typeConfig['FLIGHT'], title: '搭機返回香港', desc: '航班 UO687。' }
+            { id: '5-1', time: '10:00', type: 'HOTEL', icon: '🏨', color: 'border-gray-400', title: '退房', desc: 'Dormy Inn 辦理退房手續。' },
+            { id: '5-2', time: '11:30', type: 'TRANSPORT', icon: '🚆', color: 'border-blue-400', title: '前往關西機場', desc: '和歌山駅 → 日根野駅 → 關空快速 → 關西空港。' },
+            { id: '5-3', time: '14:25', type: 'TRANSPORT', icon: '✈️', color: 'border-blue-400', title: '搭機返回香港', desc: '航班 UO687，17:35 抵達 HKG。' }
           ]
         });
 
         const currentDayItinerary = computed(() => itineraryData.value[selectedDate.value] ||[]);
-
-        const showAddModal = ref(false);
-        const newItem = ref({ time: '12:00', type: 'ACTIVITY', title: '', desc: '' });
-
-        const addItem = () => {
-          if (!newItem.value.title) return alert('請填寫標題！');
-          const conf = typeConfig[newItem.value.type];
-          
+        const newItin = ref({ time: '', type: 'ACTIVITY', title: '', desc: '' });
+        
+        const addItin = () => {
+          if (!newItin.value.time || !newItin.value.title) return alert('請填寫時間與標題');
+          const config = typeConfig[newItin.value.type];
           itineraryData.value[selectedDate.value].push({
-            id: Date.now().toString(),
-            time: newItem.value.time,
-            type: newItem.value.type,
-            icon: conf.icon,
-            color: conf.color,
-            title: newItem.value.title,
-            desc: newItem.value.desc
+            id: Date.now().toString(), time: newItin.value.time, type: config.type,
+            icon: config.icon, color: config.color, title: newItin.value.title,
+            desc: newItin.value.desc, remark: ''
           });
-
           itineraryData.value[selectedDate.value].sort((a, b) => a.time.localeCompare(b.time));
-          showAddModal.value = false;
-          newItem.value = { time: '12:00', type: 'ACTIVITY', title: '', desc: '' };
+          newItin.value = { time: '', type: 'ACTIVITY', title: '', desc: '' };
         };
 
-        const deleteItem = (id) => {
-          if(confirm('確定要刪除這個行程嗎？')) {
+        const deleteItin = (id) => {
+          if (confirm('確定要刪除嗎？')) {
             itineraryData.value[selectedDate.value] = itineraryData.value[selectedDate.value].filter(i => i.id !== id);
           }
+        };
+
+        const editItinId = ref(null);
+        const editItinForm = ref({});
+        const startEditItin = (item) => {
+          editItinId.value = item.id;
+          editItinForm.value = JSON.parse(JSON.stringify(item));
+        };
+        const saveItinEdit = () => {
+          const list = itineraryData.value[selectedDate.value];
+          const index = list.findIndex(i => i.id === editItinId.value);
+          if (index > -1) {
+            const config = typeConfig[editItinForm.value.type];
+            list[index] = { ...editItinForm.value, icon: config.icon, color: config.color };
+            list.sort((a, b) => a.time.localeCompare(b.time));
+          }
+          editItinId.value = null;
         };
 
         const sortableList = ref(null);
@@ -327,10 +700,7 @@
           if (sortableInstance) sortableInstance.destroy();
           if (sortableList.value) {
             sortableInstance = new Sortable(sortableList.value, {
-              handle: '.drag-handle',
-              animation: 150,
-              ghostClass: 'sortable-ghost',
-              dragClass: 'sortable-drag',
+              handle: '.drag-handle', animation: 150, ghostClass: 'sortable-ghost', dragClass: 'sortable-drag',
               onEnd: (evt) => {
                 const list = itineraryData.value[selectedDate.value];
                 const movedItem = list.splice(evt.oldIndex, 1)[0];
@@ -340,33 +710,136 @@
           }
         };
 
-        watch([currentTab, selectedDate], () => { if (currentTab.value === 'itinerary') nextTick(initSortable); });
-        onMounted(() => { initSortable(); });
+        watch([currentTab, selectedDate], () => { if (currentTab.value === 'itinerary') nextTick(() => initSortable()); });
+        onMounted(() => { fetchRealTimeWeather(); initSortable(); });
 
+        // =============== 3. 記帳系統 ===============
         const exchangeRate = ref(0.052); 
-        const totalJpy = ref(12500);
+        const expenses = ref([
+          { id: 1, cat: '交通', amount: 1000, desc: '川久博物館門票', date: '5/15' },
+          { id: 2, cat: '餐飲', amount: 3500, desc: 'Toretore 海鮮午餐', date: '5/15' }
+        ]);
+        const expCrud = setupCrud(expenses);
+        const newExp = ref({ amount: '', desc: '', cat: '餐飲' });
+
+        const addExpense = () => {
+          if (!newExp.value.amount || !newExp.value.desc) return;
+          expenses.value.unshift({ id: Date.now(), cat: newExp.value.cat, amount: Number(newExp.value.amount), desc: newExp.value.desc, date: '今日' });
+          newExp.value.amount = ''; newExp.value.desc = '';
+        };
+
+        const totalJpy = computed(() => expenses.value.reduce((sum, item) => sum + Number(item.amount), 0));
         const totalHkd = computed(() => (totalJpy.value * exchangeRate.value).toFixed(1));
+        const categoryTotals = computed(() => {
+          const totals = { '餐飲': 0, '購物': 0, '交通': 0, '住宿': 0 };
+          expenses.value.forEach(exp => { if(totals[exp.cat] !== undefined) totals[exp.cat] += Number(exp.amount); });
+          return totals;
+        });
 
+        // =============== 4. Checklist (TO DO) ===============
         const checklist = ref([
-          { id: 1, text: '護照 / Visit Japan Web QR Code', done: true },
-          { id: 2, text: '<span class="text-orange-600 font-bold">JR 關西廣域周遊券</span>', done: false },
-          { id: 3, text: '準備 <span class="font-bold">排汗衣與好走的鞋</span>', done: false }
+          { id: 1, text: '護照 / Visit Japan Web QR Code', done: false },
+          { id: 2, text: '<span class="text-orange-600 font-bold">JR 關西廣域周遊券</span> 電子憑證', done: false },
+          { id: 3, text: '<span class="text-purple-600 font-bold">和歌山 Fun Pass</span> 電子憑證', done: false },
+          { id: 4, text: '準備 <span class="font-bold">HYDE 演唱會</span> 電子票與應援物', done: false },
+          { id: 5, text: '熊野古道專用：<span class="text-teal-600 font-bold">速乾毛巾、行山鞋</span>', done: false },
+          { id: 6, text: '浦島日歸溫泉：<span class="text-orange-600 font-bold">毛巾、拖鞋、換洗衣物</span>', done: false },
+          { id: 7, text: '開通網卡或 eSIM', done: false }
         ]);
+        const todoCrud = setupCrud(checklist);
+        const newTodoText = ref('');
+        const addTodo = () => {
+          if(newTodoText.value.trim()){
+            checklist.value.push({ id: Date.now(), text: newTodoText.value, done: false });
+            newTodoText.value = '';
+          }
+        };
 
-        // ======== 新增：參考資料列表 ========
-        const references = ref([
-          { title: 'JR西日本鐵路周遊券 (範圍與劃位)', url: 'https://www.westjr.co.jp/travel-information/tc/tickets-passes/jrwest-rail-pass/kansai_wide/' },
-          { title: 'Adventure World (動物介紹)', url: 'https://www.aws-s.com/animals/' },
-          { title: '川久博物館參觀 (HYDE 聖地)', url: 'https://sayulist.com/hyde-final-piece/' },
-          { title: 'HYDE OFFICIAL (演唱會資訊)', url: 'https://www.hyde.com/contents/15010' }
+        // =============== 5. 購物清單 (WISH LIST) ===============
+        const wishList = ref([
+          { id: 1, name: 'HYDE 巡迴限定 T-Shirt', location: '和歌山県民文化会館', price: 4500, qty: 1, done: false },
+          { id: 2, name: '和歌山特產 梅酒', location: 'Toretore 市場', price: 1800, qty: 2, done: false },
+          { id: 3, name: '紀州南高梅 伴手禮', location: '和歌山車站', price: 1200, qty: 3, done: false }
         ]);
+        const wishCrud = setupCrud(wishList);
+        const newWish = ref({ name: '', location: '', price: '', qty: 1 });
+        const addWish = () => {
+          if (!newWish.value.name) return alert('請填寫物品名稱');
+          wishList.value.unshift({
+            id: Date.now(), name: newWish.value.name, location: newWish.value.location || '未定',
+            price: Number(newWish.value.price) || 0, qty: Number(newWish.value.qty) || 1, done: false
+          });
+          newWish.value = { name: '', location: '', price: '', qty: 1 };
+        };
+
+        // =============== 6. QR Code, 航班、住宿與參考連結 ===============
+        // 入境 QR Code
+        const entryQrCode = ref('');
+        const handleQrUpload = (event) => {
+          const file = event.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => { entryQrCode.value = e.target.result; };
+            reader.readAsDataURL(file);
+          }
+        };
+
+        // 住宿
+        const accommodations = ref([
+          { id: 1, name: 'Seamore Residence (白濱)', date: '5/14', remark: '預約代號: AGODA-987', image: '' },
+          { id: 2, name: '紀伊勝浦 Hotel', date: '5/15', remark: '為了隔天熊野古道便利', image: '' },
+          { id: 3, name: 'Dormy Inn (和歌山市)', date: '5/16 - 5/18', remark: '包含夜鳴拉麵溫泉', image: '' }
+        ]);
+        const accCrud = setupCrud(accommodations);
+        const addAcc = () => {
+          accommodations.value.unshift({ id: Date.now(), name: '飯店名稱', date: '入住日期', remark: '備註', image: '' });
+          accCrud.startEdit(accommodations.value[0]);
+        };
+        const handleAccImageUpload = (event, form) => {
+          const file = event.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => { form.image = e.target.result; };
+            reader.readAsDataURL(file);
+          }
+        };
+
+        // 航班
+        const flights = ref([
+          { id: 1, depNo: 'UO850', depCity: 'HKG', depTime: '07:05', depDate: 'May 14', arrNo: 'UO850', arrCity: 'KIX', arrTime: '11:50', arrDate: 'May 14', duration: '3h 45m' },
+          { id: 2, depNo: 'UO687', depCity: 'KIX', depTime: '14:25', depDate: 'May 18', arrNo: 'UO687', arrCity: 'HKG', arrTime: '17:35', arrDate: 'May 18', duration: '3h 10m' }
+        ]);
+        const flightCrud = setupCrud(flights);
+        const addFlight = () => {
+          flights.value.push({ id: Date.now(), depNo: '航班號', depCity: '出發地', depTime: '時間', depDate: '日期', arrNo: '', arrCity: '抵達地', arrTime: '時間', arrDate: '日期', duration: '時長' });
+          flightCrud.startEdit(flights.value[flights.value.length - 1]);
+        };
+
+        // 連結
+        const referenceLinks = ref([
+          { id: 1, title: 'JR 關西廣域鐵路周遊券', desc: '官方資訊與可搭乘範圍', url: 'https://www.westjr.co.jp/travel-information/tc/tickets-passes/jrwest-rail-pass/kansai_wide/' },
+          { id: 2, title: '和歌山 Fun Pass', desc: '可兌換景點與美食清單', url: 'https://travelcontentsapp.com/jp/have-fun-pass/wakayama/' },
+          { id: 3, title: 'Adventure World (動物介紹)', desc: '園區動物分佈與活動介紹', url: 'https://www.aws-s.com/animals/' },
+          { id: 4, title: '那智巴士時刻表 (PDF)', desc: '勝浦站 ↔ 大門坂 ↔ 那智瀑布', url: 'https://kumanogobobus.nankai-nanki.jp/cms/wp-kumanogobobus/wp-content/uploads/%E2%98%852024R6.5.1-%E9%82%A3%E6%99%BA%E5%B1%B1%E6%99%82%E5%88%BB%E8%A1%A8.pdf' },
+          { id: 5, title: '川久博物館 (HYDE 聖地)', desc: 'FINAL PIECE MV 拍攝場景指南', url: 'https://sayulist.com/hyde-final-piece/' }
+        ]);
+        const linkCrud = setupCrud(referenceLinks);
+        const addLink = () => {
+          referenceLinks.value.unshift({ id: Date.now(), title: '新連結', desc: '描述', url: 'https://' });
+          linkCrud.startEdit(referenceLinks.value[0]);
+        };
 
         return {
           currentTab, dates, selectedDate, currentDayItinerary, sortableList,
-          weatherInfo, currentWeatherData,
-          showAddModal, newItem, addItem, deleteItem,
-          exchangeRate, totalJpy, totalHkd, checklist,
-          references // 將資料暴露給 HTML
+          exchangeRate, expenses, newExp, addExpense, totalJpy, totalHkd, categoryTotals, expCrud,
+          checklist, todoCrud, newTodoText, addTodo,
+          isLoadingWeather, currentWeather,
+          newItin, addItin, deleteItin, editItinId, editItinForm, startEditItin, saveItinEdit,
+          referenceLinks, linkCrud, addLink,
+          wishList, wishCrud, newWish, addWish,
+          flights, flightCrud, addFlight,
+          accommodations, accCrud, addAcc, handleAccImageUpload,
+          entryQrCode, handleQrUpload
         };
       }
     }).mount('#app');
