@@ -149,12 +149,18 @@
             <div class="flex-1 border-l-[3px] pl-4 py-0.5 relative" :class="item.color">
               <div class="flex justify-between items-start">
                 <div>
-                  <h3 class="text-base font-bold text-textDark tracking-wide leading-tight">{{ item.title }}</h3>
+                  <h3 class="text-base font-bold text-textDark tracking-wide leading-tight pr-1">{{ item.title }}</h3>
                   <div class="flex items-center gap-1 text-[10px] text-textMuted font-bold mt-1.5 tracking-wider">
                     <span>{{ item.icon }}</span><span>{{ item.type }}</span>
                   </div>
                 </div>
-                <div class="flex items-center gap-1 text-gray-300">
+                <div class="flex items-center gap-1.5 text-gray-300">
+                  <!-- 顯眼的地圖按鈕 -->
+                  <a :href="'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(item.title)" target="_blank" class="flex items-center gap-0.5 px-2 py-1 bg-blue-50 text-blue-500 border border-blue-100 hover:bg-blue-100 hover:text-blue-600 rounded-lg transition-colors cursor-pointer" title="打開地圖">
+                    <svg class="w-3 h-3" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                    <span class="text-[10px] font-bold">地圖</span>
+                  </a>
+                  <!-- 編輯與刪除 -->
                   <button @click="startEditItin(item)" class="p-1 hover:text-green-500 transition-colors cursor-pointer" title="編輯">
                     <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg>
                   </button>
@@ -253,25 +259,47 @@
         <button @click="currentTab = 'itinerary'" class="text-sm font-bold text-textMuted border border-gray-300 rounded-full px-3 py-1">返回行程</button>
       </div>
 
+      <!-- 新增物品表單 (支援相機/照片上傳) -->
       <div class="bg-white rounded-3xl p-5 shadow-sm mb-4 border border-gray-100">
-        <div class="flex gap-2 mb-2">
-          <input v-model="newWish.name" type="text" placeholder="想買什麼？..." class="flex-1 bg-gray-50 rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-header">
-          <input v-model="newWish.qty" type="number" placeholder="數量" class="w-1/4 bg-gray-50 rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-header">
-        </div>
-        <div class="flex gap-2 mb-3">
-          <input v-model="newWish.location" type="text" placeholder="購買地點..." class="flex-1 bg-gray-50 rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-header">
-          <input v-model="newWish.price" type="number" placeholder="單價 (¥)" class="w-1/3 bg-gray-50 rounded-xl px-3 py-2 text-sm outline-none focus:ring-1 focus:ring-header">
+        <div class="flex gap-3 mb-3">
+          <!-- 照片上傳區 -->
+          <label class="w-16 h-16 flex-shrink-0 bg-gray-50 border border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors overflow-hidden relative">
+            <img v-if="newWish.image" :src="newWish.image" class="w-full h-full object-cover">
+            <template v-else>
+              <svg class="w-5 h-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></template>
+            </template>
+            <!-- 允許拍照或選擇相簿 -->
+            <input type="file" accept="image/*" class="hidden" @change="handleWishImageUpload($event, newWish)">
+          </label>
+          
+          <div class="flex-1 flex flex-col gap-2">
+            <div class="flex gap-2">
+              <input v-model="newWish.name" type="text" placeholder="想買什麼？" class="flex-1 bg-gray-50 rounded-xl px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header">
+              <input v-model="newWish.qty" type="number" placeholder="數量" class="w-16 bg-gray-50 rounded-xl px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header text-center">
+            </div>
+            <div class="flex gap-2">
+              <input v-model="newWish.location" type="text" placeholder="購買地點" class="flex-1 bg-gray-50 rounded-xl px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header">
+              <input v-model="newWish.price" type="number" placeholder="¥ 單價" class="w-24 bg-gray-50 rounded-xl px-3 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header">
+            </div>
+          </div>
         </div>
         <button @click="addWish" class="w-full bg-tabActive text-white rounded-xl py-2 text-sm font-bold active:scale-95 transition-transform">加入清單</button>
       </div>
 
+      <!-- 物品清單顯示與編輯 -->
       <div class="space-y-3 pb-12">
         <div v-for="item in wishList" :key="item.id" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 relative group">
           <template v-if="wishCrud.editId.value !== item.id">
             <div class="flex items-start gap-3 transition-all duration-300">
+              <!-- 打勾 -->
               <div class="w-5 h-5 flex-shrink-0 rounded border mt-0.5 flex items-center justify-center transition-colors cursor-pointer shadow-sm" :class="item.done ? 'bg-header border-header text-white' : 'border-gray-300 bg-gray-50'" @click="item.done = !item.done">
                  <svg v-if="item.done" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" /></svg>
               </div>
+              
+              <!-- 照片縮圖 -->
+              <img v-if="item.image" :src="item.image" class="w-12 h-12 object-cover rounded-lg flex-shrink-0 shadow-sm border border-gray-100 opacity-90">
+              
+              <!-- 內容 -->
               <div class="flex-1 transition-opacity duration-300" :class="item.done ? 'opacity-40' : ''">
                 <div class="flex justify-between items-start">
                   <h4 class="font-bold text-sm text-textDark" :class="item.done ? 'line-through' : ''">{{ item.name }}</h4>
@@ -282,20 +310,33 @@
                 </div>
                 <p class="text-xs text-textMuted mt-1">📍 {{ item.location }}</p>
               </div>
+              
               <div class="flex flex-col gap-1 text-gray-300 opacity-60 group-hover:opacity-100 ml-2">
                 <button @click="wishCrud.startEdit(item)" class="p-1 hover:text-green-500 transition-colors"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" /></svg></button>
                 <button @click="wishCrud.remove(item.id)" class="p-1 hover:text-red-400 transition-colors"><svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
               </div>
             </div>
           </template>
+
           <template v-else>
-            <div class="flex gap-2 mb-2">
-              <input v-model="wishCrud.editForm.value.name" type="text" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header">
-              <input v-model.number="wishCrud.editForm.value.qty" type="number" class="w-1/4 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header">
-            </div>
-            <div class="flex gap-2 mb-2">
-              <input v-model="wishCrud.editForm.value.location" type="text" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header">
-              <input v-model.number="wishCrud.editForm.value.price" type="number" class="w-1/3 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header">
+            <div class="flex gap-3 mb-3">
+              <!-- 編輯時也可更換照片 -->
+              <label class="w-14 h-14 flex-shrink-0 bg-gray-50 border border-dashed border-gray-300 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-100 transition-colors overflow-hidden relative">
+                <img v-if="wishCrud.editForm.value.image" :src="wishCrud.editForm.value.image" class="w-full h-full object-cover">
+                <svg v-else class="w-4 h-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" /><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" /></svg>
+                <input type="file" accept="image/*" class="hidden" @change="handleWishImageUpload($event, wishCrud.editForm.value)">
+              </label>
+              
+              <div class="flex-1 flex flex-col gap-2">
+                <div class="flex gap-2">
+                  <input v-model="wishCrud.editForm.value.name" type="text" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header">
+                  <input v-model.number="wishCrud.editForm.value.qty" type="number" class="w-16 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header text-center">
+                </div>
+                <div class="flex gap-2">
+                  <input v-model="wishCrud.editForm.value.location" type="text" class="flex-1 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header">
+                  <input v-model.number="wishCrud.editForm.value.price" type="number" placeholder="¥ 單價" class="w-24 bg-gray-50 border border-gray-200 rounded-xl px-2 py-1.5 text-sm outline-none focus:ring-1 focus:ring-header">
+                </div>
+              </div>
             </div>
             <div class="flex justify-end gap-2">
               <button @click="wishCrud.cancelEdit" class="text-xs bg-gray-200 px-3 py-1.5 rounded-lg font-bold">取消</button>
@@ -525,7 +566,7 @@
   <script>
     const { createApp, ref, computed, onMounted, watch, nextTick } = Vue;
 
-    // 通用 CRUD 工廠函數 (給陣列使用)
+    // 通用 CRUD 工廠函數
     const setupCrud = (listRef) => {
       const editId = ref(null);
       const editForm = ref({});
@@ -755,25 +796,35 @@
           }
         };
 
-        // =============== 5. 購物清單 (WISH LIST) ===============
+        // =============== 5. 購物清單 (WISH LIST 照片上傳) ===============
         const wishList = ref([
-          { id: 1, name: 'HYDE 巡迴限定 T-Shirt', location: '和歌山県民文化会館', price: 4500, qty: 1, done: false },
-          { id: 2, name: '和歌山特產 梅酒', location: 'Toretore 市場', price: 1800, qty: 2, done: false },
-          { id: 3, name: '紀州南高梅 伴手禮', location: '和歌山車站', price: 1200, qty: 3, done: false }
+          { id: 1, name: 'HYDE 巡迴限定 T-Shirt', location: '和歌山県民文化会館', price: 4500, qty: 1, done: false, image: '' },
+          { id: 2, name: '和歌山特產 梅酒', location: 'Toretore 市場', price: 1800, qty: 2, done: false, image: '' },
+          { id: 3, name: '紀州南高梅 伴手禮', location: '和歌山車站', price: 1200, qty: 3, done: false, image: '' }
         ]);
         const wishCrud = setupCrud(wishList);
-        const newWish = ref({ name: '', location: '', price: '', qty: 1 });
+        const newWish = ref({ name: '', location: '', price: '', qty: 1, image: '' });
+        
+        const handleWishImageUpload = (event, targetObj) => {
+          const file = event.target.files[0];
+          if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => { targetObj.image = e.target.result; };
+            reader.readAsDataURL(file);
+          }
+        };
+
         const addWish = () => {
           if (!newWish.value.name) return alert('請填寫物品名稱');
           wishList.value.unshift({
             id: Date.now(), name: newWish.value.name, location: newWish.value.location || '未定',
-            price: Number(newWish.value.price) || 0, qty: Number(newWish.value.qty) || 1, done: false
+            price: Number(newWish.value.price) || 0, qty: Number(newWish.value.qty) || 1, 
+            done: false, image: newWish.value.image
           });
-          newWish.value = { name: '', location: '', price: '', qty: 1 };
+          newWish.value = { name: '', location: '', price: '', qty: 1, image: '' };
         };
 
         // =============== 6. QR Code, 航班、住宿與參考連結 ===============
-        // 入境 QR Code
         const entryQrCode = ref('');
         const handleQrUpload = (event) => {
           const file = event.target.files[0];
@@ -784,7 +835,6 @@
           }
         };
 
-        // 住宿
         const accommodations = ref([
           { id: 1, name: 'Seamore Residence (白濱)', date: '5/14', remark: '預約代號: AGODA-987', image: '' },
           { id: 2, name: '紀伊勝浦 Hotel', date: '5/15', remark: '為了隔天熊野古道便利', image: '' },
@@ -804,7 +854,6 @@
           }
         };
 
-        // 航班
         const flights = ref([
           { id: 1, depNo: 'UO850', depCity: 'HKG', depTime: '07:05', depDate: 'May 14', arrNo: 'UO850', arrCity: 'KIX', arrTime: '11:50', arrDate: 'May 14', duration: '3h 45m' },
           { id: 2, depNo: 'UO687', depCity: 'KIX', depTime: '14:25', depDate: 'May 18', arrNo: 'UO687', arrCity: 'HKG', arrTime: '17:35', arrDate: 'May 18', duration: '3h 10m' }
@@ -815,7 +864,6 @@
           flightCrud.startEdit(flights.value[flights.value.length - 1]);
         };
 
-        // 連結
         const referenceLinks = ref([
           { id: 1, title: 'JR 關西廣域鐵路周遊券', desc: '官方資訊與可搭乘範圍', url: 'https://www.westjr.co.jp/travel-information/tc/tickets-passes/jrwest-rail-pass/kansai_wide/' },
           { id: 2, title: '和歌山 Fun Pass', desc: '可兌換景點與美食清單', url: 'https://travelcontentsapp.com/jp/have-fun-pass/wakayama/' },
@@ -836,7 +884,7 @@
           isLoadingWeather, currentWeather,
           newItin, addItin, deleteItin, editItinId, editItinForm, startEditItin, saveItinEdit,
           referenceLinks, linkCrud, addLink,
-          wishList, wishCrud, newWish, addWish,
+          wishList, wishCrud, newWish, addWish, handleWishImageUpload,
           flights, flightCrud, addFlight,
           accommodations, accCrud, addAcc, handleAccImageUpload,
           entryQrCode, handleQrUpload
